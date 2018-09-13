@@ -26,7 +26,6 @@ Ramp=@(x) x.*BC(x-1/2)+HS(x-1);
 %                                                      %
 % % % % % % % % % % % % % % % % % % % % % % % % % % % %%
 
-
 % density (kg/m^3)
 rho = 2670;
 
@@ -74,7 +73,7 @@ W=ones(M,1)*dz;       % Down-dip width of slip patch
 
 % Surface points (virtual GPS receivers crossing the fault in x2)
 nsta = 100;
-eps = 1e-6;
+eps = 1e-6; % just to shift coordinates off of x2 = 0
 x2GPSR =  (200e3*tan(eps+(0:nsta/2)'*pi/(2*nsta)));
 x2GPSL = (-200e3*tan(eps+(0:nsta/2)'*pi/(2*nsta)));
 x2GPS  = [flipud(x2GPSL);x2GPSR];
@@ -153,29 +152,38 @@ fprintf('Est. Recurrence time = %.2f (yr)\n', Ti/3.15e7);
 % Use ode45 (Runge-Kutta 4th 5th order accurate integration) to 
 % solve the ODE time integration problem with adaptive time-steps
 % yp = f(t,y)
-% Y = [slip; stress; state variable; slip rate]
+% Y = [slip; stress; state variable; log10(slip rate / ref slip rate)]
 % Degrees of Freedom
 ss.dgf=4; 
 
 % Initial conditions (start at steady-state with zero slip)
 Y0=zeros(M*ss.dgf,1);   
 Y0(1:ss.dgf:end)=zeros(M,1);   
-Y0(2:ss.dgf:end)=ss.a.*ss.sigma.*asinh(ss.Vpl./ss.Vo/2.*exp((ss.fo+ss.b.*log(ss.Vo./ss.Vpl))./ss.a));
-Y0(3:ss.dgf:end)=ss.a./ss.b.*log(2*ss.Vo./ss.Vpl.*sinh((Y0(2:ss.dgf:end))./ss.a./ss.sigma))-ss.fo./ss.b;
-Y0(4:ss.dgf:end) =ss.Vpl;
+Y0(2:ss.dgf:end)=max(ss.a).*ss.sigma.*asinh(ss.Vpl./ss.Vo/2.*exp((ss.fo+ss.b.*log(ss.Vo./ss.Vpl))./max(ss.a))) + ss.eta.*ss.Vpl;
+Y0(3:ss.dgf:end)=ss.a./ss.b.*log(2*ss.Vo./ss.Vpl.*sinh((Y0(2:ss.dgf:end)-ss.eta.*ss.Vpl)./ss.a./ss.sigma))-ss.fo./ss.b;
+Y0(4:ss.dgf:end)=log(ss.Vpl./ss.Vo);
 
 % initialize the function handle with set constitutive parameters
-yp=@(t,y) odeRegDRaging(t,y,ss);
+yp=@(t,y) DieterichRuinaRegAging(t,y,ss);
 
 % ODE45 Settings
 % Initial step of 1e-5 seconds
 % Relative tolerance of 3e-8
 % [0 3e10] = simulate 3e10 seconds, 3.15e7 seconds / year
 tic
-options=odeset('Refine',1,'RelTol',3e-8,'InitialStep',1e-5);
+options=odeset('Refine',1,'RelTol',1e-8,'InitialStep',1e-5);
 [t,Y]=ode45(yp,[0 500*3.15e7],Y0,options);  
 disp('Done solving');
 toc
+
+% Included in this directory are two functions myode23 and myode45 which
+% are hacked versions of the matlab functions ode23 and ode45 (may be older
+% than current Matlab versions). These hacks are just to output data
+% periodically to disk in order to allow for larger spatial domains and 
+% time periods. Otherwise the output vectors are just increasing arrays 
+% that tend to exceed memory limits of the machine. Since the versions may
+% be older you should check the dimensionality of Y and t, they may be
+% flipped for later plottting
 
 %% % % % % % % % % % % % % % % % % % % % % % % % % % % %
 %                                                      %
@@ -183,10 +191,10 @@ toc
 %                                                      %
 % % % % % % % % % % % % % % % % % % % % % % % % % % % %%
 
-V = Y(:,4:ss.dgf:end)';       % Slip rate (m/s)
-tau = Y(:,2:ss.dgf:end)';     % Shear stress (MPa)
-Vmax = zeros(length(t),1);    % Maximum slip rate (m/s)
-Vcenter = V(floor(M/2),:);    % Slip rate at center of VW region
+V = ss.Vo.*exp(Y(:,4:ss.dgf:end)'); % Slip rate (m/s)
+tau = Y(:,2:ss.dgf:end);            % Shear stress (MPa)
+Vmax = zeros(length(t),1);          % Maximum slip rate (m/s)
+Vcenter = V(floor(M/2),:);          % Slip rate at center of VW region
 for ti = 1:length(t)
     Vmax(ti) = max(V(:,ti));
 end
@@ -233,7 +241,7 @@ figure(3);clf
 set(gcf,'Position',[50 50 590 625])
 dt = 2.628e6;            % 1 month sampling
 t0 = 150*3.15e7;         % Initial time for record
-MaxRecordT = 500*3.15e7; % 100 years time series
+MaxRecordT = 500*3.15e7; % 500 years time series
 RecordT = t0 + (0:dt:MaxRecordT)';
 tindx = zeros(length(RecordT),1);
 for tstep = 1:length(RecordT)
@@ -256,7 +264,7 @@ xlim([min(x2GPS/1e3) max(x2GPS/1e3)])
 
 % Plot time series for specific points
 [dist1,GPS1] = min(abs(x2GPS - 5e3));   % GPS station around 5 km from fault
-[dist2,GPS2] = min(abs(x2GPS - 150e3)); % GPS station around 100 km from fault
+[dist2,GPS2] = min(abs(x2GPS - 100e3)); % GPS station around 100 km from fault
 subplot(3,2,[3 4])
 plot(t/3.15e7,UGPS(GPS1,:),'k');
 box on; 
