@@ -25,6 +25,26 @@ Ramp=@(x) x.*BC(x-1/2)+HS(x-1);
 %            Stress Interaction Functions              %
 %                                                      %
 % % % % % % % % % % % % % % % % % % % % % % % % % % % %%
+% Vertical fault in a half-space centered at x2 = 0
+% 2D Antiplane problem (x2 x x3): 
+% Out-of-plane displacements u1 are non-zero, u2 = u3 = 0
+% u1 are assumed uniform along strike, only vary in x2 x x3 plane
+% 
+%.                              x1             
+%.                             /.          
+%.                            /.          
+%.                           /.           
+%.  Free surface (x3 = 0).  /             
+%.  ---------------------------------------------------->. x2
+%.                         |
+%.                         |
+%.                         |. Vertical strike-slip 
+%.                         |. rate-and-state fault
+%.                         |
+%.                         |
+%.                         |
+%                          v  x3
+
 
 % density (kg/m^3)
 rho = 2670;
@@ -130,8 +150,8 @@ VWp = find(ss.a < ss.b); % VW region
 hstar=min(pi/2*G*ss.L(VWp).*ss.b(VWp)./(ss.b(VWp)-ss.a(VWp)).^2./ss.sigma(VWp));
 
 % Quasi-static cohesive zone ( coh0 = 9/32 GL/(b*sigma) ) 
-% Note that for this QD simulation the cohesive zone will not change
-% but this would not be the case for a truly dynamic simulation
+% Note that for this QD simulation the cohesive zone will not change,
+% which would not be the case for a fully dynamic simulation
 coh = min(9/32*pi*G*ss.L(VWp)./ss.b(VWp)./ss.sigma(VWp));
 
 % Estimate of recurrence time ( T ~ 5(b-a)*sigma / G * R/Vpl ) 
@@ -149,7 +169,7 @@ fprintf('Est. Recurrence time = %.2f (yr)\n', Ti/3.15e7);
 %                    Numerical Solution                %
 %                                                      %
 % % % % % % % % % % % % % % % % % % % % % % % % % % % %%
-% Use ode45 (Runge-Kutta 4th 5th order accurate integration) to 
+% Use ode45 (Runge-Kutta 4th / 5th order accurate integration) to 
 % solve the ODE time integration problem with adaptive time-steps
 % yp = f(t,y)
 % Y = [slip; stress; state variable; log10(slip rate / ref slip rate)]
