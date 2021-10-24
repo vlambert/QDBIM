@@ -148,10 +148,10 @@ ss.eta = G./(2*Vs);
 
 % Estimates of some key parameters
 VWp = find(ss.a < ss.b); % VW region
-% Critical nucleation size ( h* = pi/2 GbL / (b-a)^2 / sigma )
+% Critical nucleation size ( h* = pi/2 G b D_rs / (b-a)^2 / sigma )
 hstar=min(pi/2*G*ss.Drs(VWp).*ss.b(VWp)./(ss.b(VWp)-ss.a(VWp)).^2./ss.sigma(VWp));
 
-% Quasi-static cohesive zone ( coh0 = 9/32 GL/(b*sigma) ) 
+% Quasi-static cohesive zone ( coh0 = 9/32 G D_rs /(b*sigma) ) 
 % Note that for this QD simulation the cohesive zone will not change,
 % which would not be the case for a fully dynamic simulation
 coh = min(9/32*pi*G*ss.Drs(VWp)./ss.b(VWp)./ss.sigma(VWp));
