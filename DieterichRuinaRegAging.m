@@ -5,7 +5,7 @@ function [yp] = DieterichRuinaRegAging(~,y,ss)
 %
 %        /        s          \
 %    y = |       tau         |
-%        | log(theta Vo / L) |
+%        | log(theta Vo / D_rs) |
 %        \    log(V / Vo)    /
 
 % based on the regularized form of Dieterich-Ruina rate-and-state friction 
@@ -14,7 +14,7 @@ function [yp] = DieterichRuinaRegAging(~,y,ss)
 % Velocity is determined by the balance of shear resistance and shear stress
 % Resistance : tau = a sigma asinh( V/2Vo exp( (fo + b psi ) / a))
 % Stress     : tau = tauo + f(z,t) - eta*(V-Vpl)  
-% Where we use radiation damping for approximating the inertial terms
+% Where we use radiation damping to approximate the inertial terms
 % as the quasi-dynamic approximation with f(z,t) = K(delta - Vpl*t)
 %
 % This is done by taking the time-derivative of both equations and equating
@@ -35,15 +35,15 @@ function [yp] = DieterichRuinaRegAging(~,y,ss)
 %
 % Instead of directly integrating numerically the aging law
 %
-%    d theta / dt = 1 - V theta / L
+%    d theta / dt = 1 - V theta / D_rs
 %
 % as is, we operate the following change of variable
 %
-%    phi = ln (theta Vo / L)
+%    phi = ln (theta Vo / D_rs)
 %
 % where we obtain the evolution law for the new variable
 % 
-%    d phi / dt = ( Vo exp(-phi) - V ) / L
+%    d phi / dt = ( Vo exp(-phi) - V ) / D_rs
 %
 % Given the regularized form of Dieterich-Ruina R+S we can express,
 %    1 dV      K (V - Vpl) - b sigma dphi / dt Q
@@ -74,7 +74,7 @@ yp=zeros(size(y));
 yp(1:ss.dgf:end)=V;
 
 % State Variable
-dth = (ss.Vo.*exp(-th)-V)./ss.L;
+dth = (ss.Vo.*exp(-th)-V)./ss.Drs;
 yp(3:ss.dgf:end)=dth;
 
 % Slip Velocity

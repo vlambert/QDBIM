@@ -1,12 +1,14 @@
 %% % % % % % % % % % % % % % % % % % % % % % % % % % % %
 %                                                      %
-%      2D Quasi-dynamic simulator for evaluating       %
-%   the slip history on a fault in antiplane strain    %
+%   2D Quasi-dynamic simulation of the evolution of    %
+%   slip and stress on a fault in antiplane strain     %
 %   governed by rate- and state-dependent friction     %
 %                                                      %
 %                Valere Lambert, 2018                  %
 % % % % % % % % % % % % % % % % % % % % % % % % % % % %%
 clear all;close all;
+
+addpath('include/');
 %% % % % % % % % % % % % % % % % % % % % % % % % % % % %
 %                  Useful Functions                    %
 % % % % % % % % % % % % % % % % % % % % % % % % % % % %%
@@ -133,7 +135,7 @@ ss.b=0.015*ones(size(y3));
 ss.sigma=50.0*ones(size(y3));
 
 % characteristic weakening distance (m)
-ss.L=8e-3*ones(size(y3));
+ss.Drs=8e-3*ones(size(y3));
 
 % plate rate (m/s)
 ss.Vpl=1e-9*ones(size(y3));
@@ -147,12 +149,12 @@ ss.eta = G./(2*Vs);
 % Estimates of some key parameters
 VWp = find(ss.a < ss.b); % VW region
 % Critical nucleation size ( h* = pi/2 GbL / (b-a)^2 / sigma )
-hstar=min(pi/2*G*ss.L(VWp).*ss.b(VWp)./(ss.b(VWp)-ss.a(VWp)).^2./ss.sigma(VWp));
+hstar=min(pi/2*G*ss.Drs(VWp).*ss.b(VWp)./(ss.b(VWp)-ss.a(VWp)).^2./ss.sigma(VWp));
 
 % Quasi-static cohesive zone ( coh0 = 9/32 GL/(b*sigma) ) 
 % Note that for this QD simulation the cohesive zone will not change,
 % which would not be the case for a fully dynamic simulation
-coh = min(9/32*pi*G*ss.L(VWp)./ss.b(VWp)./ss.sigma(VWp));
+coh = min(9/32*pi*G*ss.Drs(VWp)./ss.b(VWp)./ss.sigma(VWp));
 
 % Estimate of recurrence time ( T ~ 5(b-a)*sigma / G * R/Vpl ) 
 Ti = 5*mean((ss.b(VWp)-ss.a(VWp)).*ss.sigma(VWp)).*0.5.*(y3(VWp(end))-y3(VWp(1)))./(G*mean(ss.Vpl(VWp)));
