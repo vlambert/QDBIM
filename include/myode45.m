@@ -78,6 +78,10 @@ function varargout = myode45(ode,tspan,y0,options,varargin)
 
 solver_name = 'ode45';
 
+% byte count parameter
+bcm = 3e8;
+disp(bcm)
+
 % Check inputs
 if nargin < 4
   options = [];
@@ -419,11 +423,12 @@ while ~done
         fprintf(yOUT,'%22.16e ',ynew);
         fprintf(yOUT,'\n');
         byteCount=byteCount+Ydof;
-        if byteCount/3e7 > 1
+        %disp(byteCount)
+        if byteCount/bcm > 1
             fclose(yOUT);
             file_i=file_i+1; 
             yOUT=fopen(sprintf('%s/yOUT_%d.dat',oDir,file_i),'wt');
-            byteCount=0;
+            %byteCount=0;
         end
      end
 %   end
@@ -478,15 +483,24 @@ while ~done
     
     if nout_new > 0
       if output_ty
-        oldnout = nout;
-        nout = nout + nout_new;
-        if nout > length(tout)
-          tout = [tout, zeros(1,chunk,dataType)];  % requires chunk >= refine
-          yout = [yout, zeros(neq,chunk,dataType)];
+        if byteCount/bcm > 1
+            tout = zeros(1,chunk,dataType);
+            yout = zeros(neq,chunk,dataType);
+            nout = 1;
+            tout(nout) = tout_new;
+            yout(:,nout) = yout_new;
+            byteCount = 0;
+        else
+            oldnout = nout;
+            nout = nout + nout_new;
+            if nout > length(tout)
+                tout = [tout, zeros(1,chunk,dataType)];  % requires chunk >= refine
+                yout = [yout, zeros(neq,chunk,dataType)];
+            end
+            idx = oldnout+1:nout;        
+            tout(idx) = tout_new;
+            yout(:,idx) = yout_new;
         end
-        idx = oldnout+1:nout;        
-        tout(idx) = tout_new;
-        yout(:,idx) = yout_new;
       end
       if haveOutputFcn
         stop = feval(outputFcn,tout_new,yout_new(outputs,:),'',outputArgs{:});

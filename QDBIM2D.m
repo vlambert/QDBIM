@@ -193,8 +193,12 @@ yp=@(t,y) DieterichRuinaRegAging(t,y,ss);
 % Relative tolerance of 3e-8
 % [0 3e10] = simulate 3e10 seconds, 3.15e7 seconds / year
 tic
-options=odeset('Refine',1,'RelTol',1e-8,'InitialStep',1e-5);
-[t,Y]=ode45(yp,[0 500*3.15e7],Y0,options);  
+oDir = 'mydata2';
+if ~exist(oDir, 'dir')
+       mkdir(oDir);
+end
+options=odeset('Refine',1,'RelTol',1e-8,'InitialStep',1e-5,'oDir',oDir);
+[t,Y]=myode45(yp,[0 500*3.15e7],Y0,options);  
 disp('Done solving');
 toc
 
@@ -213,7 +217,7 @@ toc
 %                                                      %
 % % % % % % % % % % % % % % % % % % % % % % % % % % % %%
 
-V = ss.Vo.*exp(Y(:,4:ss.dgf:end)'); % Slip rate (m/s)
+V = ss.Vo.*exp(Y(4:ss.dgf:end,:)); % Slip rate (m/s)
 tau = Y(:,2:ss.dgf:end);            % Shear stress (MPa)
 Vmax = zeros(length(t),1);          % Maximum slip rate (m/s)
 Vcenter = V(floor(M/2),:);          % Slip rate at center of VW region
@@ -222,7 +226,7 @@ for ti = 1:length(t)
 end
 
 % GPS time series (displacement in x1 direction)
-shistory = Y(:,1:ss.dgf:end)';
+shistory = Y(1:ss.dgf:end,:);
 UGPS = ss.ku1*shistory;
 
 % Evolution of slip rate in the time domain
