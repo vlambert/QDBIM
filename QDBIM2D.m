@@ -267,7 +267,7 @@ figure(3);clf
 set(gcf,'Position',[50 50 590 625])
 dt = 2.628e6;            % 1 month sampling
 t0 = 150*3.15e7;         % Initial time for record
-MaxRecordT = 500*3.15e7; % 500 years time series
+MaxRecordT = 400*3.15e7; % 400 years time series
 RecordT = t0 + (0:dt:MaxRecordT)';
 tindx = zeros(length(RecordT),1);
 for tstep = 1:length(RecordT)
@@ -280,8 +280,9 @@ for tstep=1:length(RecordT)
 end
 cb=colorbar;
 colormap(cb,colorspec)
-caxis([1 length(RecordT)])
-ylabel(cb,'Time Steps');
+%caxis([1 length(RecordT)])
+caxis([RecordT(1)/3.15e7 RecordT(end)/3.15e7])
+ylabel(cb,'Time (years)');
 box on; grid on;
 xlabel('Distance across fault (km)');
 ylabel('Displacement (m)')
