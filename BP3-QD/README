@@ -2,4 +2,4 @@ This is a simple quasi-dynamic boundary element code for performing 2D plane str
 
 The three files are set up to solve benchmark problems BP-3 for fault dips of 30, 60 and 90 degrees from the Statewide California Earthquake Center Working Group for Advancing Simulations of Earthquakes and Aseismic Slip: https://strike.scec.org/cvws/seas/benchmark_descriptions.html.
 
-The problems consider the simulation of sequences of earthquakes and aseismic slip transient on a dipping thrust fault. 
+The problems consider the simulation of sequences of earthquakes and aseismic slip on a dipping thrust fault. 
